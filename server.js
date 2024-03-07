@@ -13,7 +13,7 @@ const storage = new Storage();
 let bucketName = "videos-de-prueba-01"
 const transferManager = new TransferManager(storage.bucket(bucketName))
 
-async function uploadFileInChunksToGCP(chunkSize, filePath) {
+async function uploadFileInChunksToGCP(filePath, chunkSize) {
 	await transferManager.uploadFileInChunks(filePath, {
 		chunkSizeBytes: chunkSize,
 	})
@@ -59,12 +59,21 @@ server = http.createServer(async (request, response) => {
 		await customReadFile(path.join(__dirname, url), response)
 
 	} else if(url==="/upload" && method==='POST') {		/*  ENDPOINT CORRESPONDIENTE AL INTENTO DE CARGA DE ARCHIVO  */
+		let reqPayload = request.body
+		let file_chunk_size = 0
 
 		response.writeHead(httpStatus.StatusCodes.OK, {
 			"Content-Type": "application/xml"
 		})
 
-		uploadFileInChunksToGCP()
+		//  @params
+		//  filePath  : string
+		//  chunkSize : num of bytes
+
+		let file_path = "./multimedia/video1.mp4"
+		file_chunk_size = 4*1024*1024
+
+		uploadFileInChunksToGCP(file_path, file_chunk_size)
 		.catch(console.error)
 
 
