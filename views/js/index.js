@@ -14,6 +14,8 @@ let fileSize
 let file
 
 const handleFileChange = (evt) => {
+	evt.preventDefault()
+
 	file = evt.target.files[0]
 	fileSize = file.size
 }
@@ -25,10 +27,17 @@ const partCount = calculateChunkSize(fileSize, maxPartSize)
 
 // send button func
 const upload = (evt) => {
-	evt.stopPropagation()
+	evt.preventDefault()
 	if(!file) return
 
-	fetch("/upload")
+	let reader = new FileReader()
+	reader.readAsArrayBuffer(file)
+
+	reader.onload = (buff_evt) => {
+		console.log("buffer reader status: ", buff_evt)
+	}
+
+	fetch("/upload", { method: 'POST' })
 	.then((res) => res.json())
 	.then(data => {
 		console.log("data ")
@@ -39,17 +48,23 @@ const upload = (evt) => {
 
 // rest of logic outside any func
 
-let reader = new FileReader()
-reader.readAsArrayBuffer(file)
 
 
-reader.onload = (buff_evt) => {
-	console.log("buffer reader status: ", buff_evt)
-}
 
+
+
+let file_input = document.getElementById("upload-input")
 let btn = document.getElementById("upload-btn")
 
+
+file_input.addEventListener("change", (e) => {
+	console.log('change')
+	handleFileChange(e)
+})
+
+
 btn.addEventListener("click", (e) => {
+	console.log('click')
 	upload(e)
 })
 

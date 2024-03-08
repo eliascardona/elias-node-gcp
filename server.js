@@ -4,20 +4,30 @@ const fs = require('fs').promises
 const path = require('path')
 const httpStatus = require('http-status-codes')
 const sendError = require('./errors.js')
+// uuid lib
+const { v4: uuidv4 } = require('uuid')
 // GCP imports
 const { Storage, TransferManager } = require('@google-cloud/storage')
-const storage = new Storage();
-
+const storage = new Storage()
 
 // Using tranfer manager
 let bucketName = "videos-de-prueba-01"
 const transferManager = new TransferManager(storage.bucket(bucketName))
+//const res = await transferManager.uploadFileInChunks('large-file.txt')
 
-async function uploadFileInChunksToGCP(filePath, chunkSize) {
-	await transferManager.uploadFileInChunks(filePath, {
+
+async function uploadFileInChunksToGCP(filePath) {
+	let chunkSize = 4194304
+	let upload_options = {
+		uploadId: uuidv4(),
 		chunkSizeBytes: chunkSize,
+	}
+	let r = await transferManager.uploadFileInChunks(filePath, upload_options)
+
+	r.then(d => {
+		console.log(d)
 	})
-	console.log(`${filePath} uploaded to ${bucketName}.`)
+	.catch(console.error)
 }
 
 
@@ -59,34 +69,25 @@ server = http.createServer(async (request, response) => {
 		await customReadFile(path.join(__dirname, url), response)
 
 	} else if(url==="/upload" && method==='POST') {		/*  ENDPOINT CORRESPONDIENTE AL INTENTO DE CARGA DE ARCHIVO  */
-		let reqPayload = request.body
-		let file_chunk_size = 0
 
 		response.writeHead(httpStatus.StatusCodes.OK, {
 			"Content-Type": "application/xml"
 		})
-
 		//  @params
 		//  filePath  : string
 		//  chunkSize : num of bytes
-
 		let file_path = "./multimedia/video1.mp4"
-		file_chunk_size = 4*1024*1024
 
-		uploadFileInChunksToGCP(file_path, file_chunk_size)
+		uploadFileInChunksToGCP(file_path)
 		.catch(console.error)
-
 
 	} else {
 		sendError(response)
 	}
 })
 
-
-const PORT = 4242
-
-server.listen(PORT, () =>
-	console.log(`server  ->  localhost:${port}`)
-})
+const port = 4242
+server.listen(port)
+console.log(`port ${port}`)
 
 
