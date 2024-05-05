@@ -7,8 +7,6 @@ const calculateChunkSize = (fileSize, maxPartSize, maxPartCount = 20, minPartSiz
 
 	return finalPartCount;
 }
-
-
 // program as such
 let fileSize
 let file
@@ -18,50 +16,43 @@ const handleFileChange = (evt) => {
 
 	file = evt.target.files[0]
 	fileSize = file.size
+	console.log("file: ", file)
 }
 
 const maxPartSizeInBytes = 4 * 1024 * 1024
 const maxPartSize = maxPartSizeInBytes / (1024 * 1024)
 const partCount = calculateChunkSize(fileSize, maxPartSize)
 
-
-// send button func
+// upload file func
 const upload = (evt) => {
 	evt.preventDefault()
-	if(!file) return
 
 	let reader = new FileReader()
 	reader.readAsArrayBuffer(file)
 
 	reader.onload = (buff_evt) => {
-		console.log("buffer reader status: ", buff_evt)
+		let blob = new Blob([buff_evt.target.result], { type: file.type })
+		let xhr = new XMLHttpRequest()
+
+		xhr.open("PUT", "/upload", true)
+		xhr.setRequestHeader("Content-Type", file.type)
+		xhr.onload = function (e) {
+			if(xhr.readyState === 4 && xhr.status === 200) {
+				console.log(xhr.responseText)
+			}
+		}
+		xhr.send(blob)
 	}
-
-	fetch("/upload", { method: 'POST' })
-	.then((res) => res.json())
-	.then(data => {
-		console.log("data ")
-		console.log(data)
-	})
-	.catch(err => console.log("err ", err))
 }
-
-// rest of logic outside any func
-
-
-
-
 
 
 let file_input = document.getElementById("upload-input")
 let btn = document.getElementById("upload-btn")
 
-
 file_input.addEventListener("change", (e) => {
 	console.log('change')
 	handleFileChange(e)
 })
-
 
 btn.addEventListener("click", (e) => {
 	console.log('click')

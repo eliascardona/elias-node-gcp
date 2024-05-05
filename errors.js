@@ -7,7 +7,7 @@ function sendError(res) {
 
   const response = {
     status: res.statusCode,
-    message: httpStatus.getStatusText(res.statusCode),
+    message: httpStatus.getReasonPhrase(res.statusCode),
     headers: res.headers
   };
 
